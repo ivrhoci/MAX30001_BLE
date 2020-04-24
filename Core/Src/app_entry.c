@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
-/**
- ******************************************************************************
-  * File Name          : app_entry.c
-  * Description        : Entry application source file for STM32WPAN Middleware
- ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
- ******************************************************************************
- */
+///**
+// ******************************************************************************
+//  * File Name          : app_entry.c
+//  * Description        : Entry application source file for STM32WPAN Middleware
+// ******************************************************************************
+//  * @attention
+//  *
+//  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+//  * All rights reserved.</center></h2>
+//  *
+//  * This software component is licensed by ST under Ultimate Liberty license
+//  * SLA0044, the "License"; You may not use this file except in compliance with
+//  * the License. You may obtain a copy of the License at:
+//  *                             www.st.com/SLA0044
+//  *
+// ******************************************************************************
+// */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -32,25 +32,25 @@
 
 /* Private includes -----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+//
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 extern RTC_HandleTypeDef hrtc;
 /* USER CODE BEGIN PTD */
-
+//
 /* USER CODE END PTD */
 
 /* Private defines -----------------------------------------------------------*/
 #define POOL_SIZE (CFG_TLBLE_EVT_QUEUE_LENGTH*4U*DIVC(( sizeof(TL_PacketHeader_t) + TL_BLE_EVENT_FRAME_SIZE ), 4U))
 
 /* USER CODE BEGIN PD */
-
+//
 /* USER CODE END PD */
 
 /* Private macros ------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+//
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -60,7 +60,7 @@ PLACE_IN_SECTION("MB_MEM2") ALIGN(4) static uint8_t SystemSpareEvtBuffer[sizeof(
 PLACE_IN_SECTION("MB_MEM2") ALIGN(4) static uint8_t BleSpareEvtBuffer[sizeof(TL_PacketHeader_t) + TL_EVT_HDR_SIZE + 255];
 
 /* USER CODE BEGIN PV */
-
+//
 /* USER CODE END PV */
 
 /* Private functions prototypes-----------------------------------------------*/
@@ -78,7 +78,7 @@ extern void MX_USART1_UART_Init(void);
 #endif
 
 /* USER CODE BEGIN PFP */
-
+//
 /* USER CODE END PFP */
 
 /* Functions Definition ------------------------------------------------------*/
@@ -89,7 +89,7 @@ void APPE_Init( void )
   HW_TS_Init(hw_ts_InitMode_Full, &hrtc); /**< Initialize the TimerServer */
 
 /* USER CODE BEGIN APPE_Init_1 */
-
+//
 /* USER CODE END APPE_Init_1 */
   appe_Tl_Init();	/* Initialize all transport layers */
 
@@ -99,12 +99,12 @@ void APPE_Init( void )
    * This system event is received with APPE_SysUserEvtRx()
    */
 /* USER CODE BEGIN APPE_Init_2 */
-
+//
 /* USER CODE END APPE_Init_2 */
    return;
 }
 /* USER CODE BEGIN FD */
-
+//
 /* USER CODE END FD */
 
 /*************************************************************
@@ -226,7 +226,7 @@ static void APPE_SysUserEvtRx( void * pPayload )
 }
 
 /* USER CODE BEGIN FD_LOCAL_FUNCTIONS */
-
+//
 /* USER CODE END FD_LOCAL_FUNCTIONS */
 
 /*************************************************************
@@ -301,6 +301,6 @@ void DbgOutputTraces(  uint8_t *p_data, uint16_t size, void (*cb)(void) )
 #endif
 
 /* USER CODE BEGIN FD_WRAP_FUNCTIONS */
-
+//
 /* USER CODE END FD_WRAP_FUNCTIONS */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
