@@ -8,6 +8,6 @@ For development and further research capabilities configuration parameters (for 
 
 The software was written in [STM32CubeIDE 1.1.0](https://www.st.com/en/development-tools/stm32cubeide.html) and it's written for [STM32WB55RG](https://www.st.com/en/microcontrollers-microprocessors/stm32wb55rg.html) MCU which controls the [MAX30001](https://www.maximintegrated.com/en/products/analog/data-converters/analog-front-end-ics/MAX30001.html) and [ICM-20948](https://invensense.tdk.com/products/motion-tracking/9-axis/icm-20948/) ICs over SPI interface.
 
-The configuration parameters for both MAX30001 and ICM-20948 can be changed "on the go" with this [Matlab GUI](). Also, the GUI enables to select which data is sent over bluetooth/USB/UART (TBD). For more information about the GUI see the readme file in the GUI's folder. 
+The configuration parameters for both MAX30001 and ICM-20948 can be changed "on the go" with this [Matlab GUI](https://github.com/ivrhoci/MAX30001_BLE/tree/master/Matlab%20GUI). Also, the GUI enables to select which data is sent over bluetooth/USB/UART (TBD). For more information about the GUI see the readme file in the GUI's folder. 
 
 
