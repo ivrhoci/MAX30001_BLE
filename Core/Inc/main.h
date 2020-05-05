@@ -37,12 +37,20 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi2;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern char USB_command[20];
+extern char USB_parameter[6];
+extern _Bool USB_new_command;
+extern uint32_t reg;
+#define INTB_Pin GPIO_PIN_11  //PC11 -> CN10_35
+#define INT2B_Pin GPIO_PIN_10 //PC10 -> CN10_29
+#define NSS_SPI1_Pin GPIO_PIN_4 //PA4 -> CN10_17
+#define NSS_SPI2_Pin GPIO_PIN_12 //PB12 -> CN10_16
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -52,7 +60,7 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-
+void CDC_ReceiveCallback(uint8_t* Buf, uint32_t *Len);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

@@ -29,12 +29,6 @@
 * property whatsoever. Maxim Integrated Products, Inc. retains all
 * ownership rights.
 *******************************************************************************/
-/*
- * max30001.h
- *
- *  Created on: Oct 9, 2015
- *      Author: faisal.tariq
- */
 
 #ifndef MAX30001_H_
 #define MAX30001_H_
@@ -94,17 +88,19 @@
 #define MAX30001_INT_PORT_B  3
 #define MAX30001INT_PIN_B    6
 
+void MAX30001_init(void);                    //user defined default initialisation function
+
 void MAX30001_AllowInterrupts(int state);
+
 
 /**
 * Maxim Integrated MAX30001 ECG/BIOZ chip
 */
-//class MAX30001 {
 
-//public:
-  typedef enum { // MAX30001 Register addresses
+  typedef enum {
+	// MAX30001 Register addresses
     STATUS     = 0x01,
-    EN_INT     = 0x02,
+	EN_INT     = 0x02,
     EN_INT2    = 0x03,
     MNGR_INT   = 0x04,
     MNGR_DYN   = 0x05,
@@ -164,45 +160,46 @@ void MAX30001_AllowInterrupts(int state);
 
   /*********************************************************************************/
 
-  typedef enum {
-    MAX30001_NO_INT = 0, // No interrupt
-    MAX30001_INT_B  = 1,  // INTB selected for interrupt
-    MAX30001_INT_2B = 2  // INT2B selected for interrupt
+  typedef enum {				  // Interrupt location
+    MAX30001_NO_INT = 0,          // No interrupt
+    MAX30001_INT_B  = 1,          // INTB selected for interrupt
+    MAX30001_INT_2B = 2           // INT2B selected for interrupt
   } max30001_intrpt_Location_t;
 
-
-typedef enum {
-    MAX30001_INT_DISABLED = 0,
-    MAX30001_INT_CMOS     = 1,
-    MAX30001_INT_ODN      = 2,
-    MAX30001_INT_ODNR     = 3
+typedef enum {					  // Interrupt type
+    MAX30001_INT_DISABLED = 0,    // Disabled (high impedance)
+    MAX30001_INT_CMOS     = 1,    // CMOS Driver
+    MAX30001_INT_ODN      = 2,    // Open-Drain NMOS Driver
+    MAX30001_INT_ODNR     = 3     // Open-Drain NMOS Driver with internal 125k pull up
   } max30001_intrpt_type_t;
 
-  typedef enum {          // Input Polarity selection
-    MAX30001_NON_INV = 0, // Non-Inverted
-    MAX30001_INV     = 1      // Inverted
+  typedef enum {                  // Input Polarity selection
+    MAX30001_NON_INV = 0,         // Non-Inverted
+    MAX30001_INV     = 1          // Inverted
   } max30001_emux_pol;
 
-  typedef enum {              // OPENP and OPENN setting
-    MAX30001_ECG_CON_AFE = 0, // ECGx is connected to AFE channel
-    MAX30001_ECG_ISO_AFE = 1  // ECGx is isolated from AFE channel
+  typedef enum {                  // OPENP and OPENN setting
+    MAX30001_ECG_CON_AFE = 0,     // ECGx is connected to AFE channel
+    MAX30001_ECG_ISO_AFE = 1      // ECGx is isolated from AFE channel
   } max30001_emux_openx;
 
-  typedef enum {                // EMUX_CALP_SEL & EMUX_CALN_SEL
-    MAX30001_NO_CAL_SIG = 0, // No calibration signal is applied
-    MAX30001_INPT_VMID  = 1,  // Input is connected to VMID
-    MAX30001_INPT_VCALP = 2, // Input is connected to VCALP
-    MAX30001_INPT_VCALN = 3  // Input is connected to VCALN
+  typedef enum {                  // EMUX_CALP_SEL & EMUX_CALN_SEL
+    MAX30001_NO_CAL_SIG = 0,      // No calibration signal is applied
+    MAX30001_INPT_VMID  = 1,      // Input is connected to VMID
+    MAX30001_INPT_VCALP = 2,      // Input is connected to VCALP
+    MAX30001_INPT_VCALN = 3       // Input is connected to VCALN
   } max30001_emux_calx_sel;
 
-  typedef enum {                     // EN_ECG, EN_BIOZ, EN_PACE
-    MAX30001_CHANNEL_DISABLED = 0, //
+  typedef enum {                  // EN_ECG, EN_BIOZ, EN_PACE
+    MAX30001_CHANNEL_DISABLED = 0,
     MAX30001_CHANNEL_ENABLED = 1
   } max30001_en_feature;
 
   /*********************************************************************************/
  // Data
   extern uint32_t max30001_ECG_FIFO_buffer[32]; // (303 for internal test)
+
+//vidjet jel treba ovaj dio?
 
   typedef struct { // Creating a structure for BLE data
     int16_t R2R;
@@ -316,6 +313,15 @@ typedef enum {
   int max30001_Stop_ECG(void);
 
   /**
+   * @brief For MAX30001/3 ONLY
+   * @brief This function enables the ECG.
+   * @brief Uses Register CNFG_GEN-0x10.
+   * @returns 0-if no error.  A non-zero value indicates an error.
+   *
+   */
+   int max30001_Start_ECG(void);
+
+  /**
    *  @brief For MAX30001 ONLY
    *  @brief This function sets up the MAX30001 for pace signal detection.
    *  @brief If both PACE and BIOZ are turned ON, then make sure Fcgen is set for 80K or 40K in the
@@ -390,6 +396,15 @@ typedef enum {
   int max30001_Stop_BIOZ(void);
 
   /**
+     * @brief For MAX30001/2 ONLY
+     * @brief This function enables the BIOZ.  Uses Register CNFG_GEN-0x10.
+     * @returns 0-if no error.  A non-zero value indicates an error.
+         * @returns 0-if no error.  A non-zero value indicates an error.
+     *
+     */
+    int max30001_Start_BIOZ(void);
+
+  /**
    * @brief For MAX30001/2 ONLY
    * @brief BIOZ modulated Resistance Built-in-Self-Test, Registers used: CNFG_BMUX-0x17
    * @param En_bist: Enable Modulated Resistance Built-in-Self-test <CNFG_BMUX Register>
@@ -428,6 +443,14 @@ typedef enum {
    *
    */
   int max30001_Stop_RtoR(void);
+
+  /**
+    * @brief For MAX30001/3/4 ONLY
+    * @brief This function enables the RtoR.  Uses Register CNFG_RTOR1-0x1D
+    * @returns 0-if no error.  A non-zero value indicates an error.
+    *
+    */
+   int max30001_Start_RtoR(void);
 
   /**
    * @brief This is a function that waits for the PLL to lock; once a lock is achieved it exits out. (For convenience only)
@@ -642,3 +665,4 @@ void MAX30001_AllowInterrupts(int state);
 
 #endif /* MAX30001_H_ */
 
+void max30001_usb_init(char *USB_command, uint32_t USB_parameter);
