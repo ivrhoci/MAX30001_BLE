@@ -198,7 +198,7 @@ typedef enum {					  // Interrupt type
   /*********************************************************************************/
  // Data
   extern uint32_t max30001_ECG_FIFO_buffer[32]; // (303 for internal test)
-
+  extern uint32_t max30001_BIOZ_FIFO_buffer[8];
 //vidjet jel treba ovaj dio?
 
   typedef struct { // Creating a structure for BLE data

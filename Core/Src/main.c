@@ -29,6 +29,9 @@
 #include <string.h>
 #include <math.h>
 #include "max30001.h"
+#include "ICM20948.h"
+#include "output_mode.h"
+#include "BPM_calc.h"
 //#include "extern_var.h"
 /* USER CODE END Includes */
 
@@ -52,6 +55,8 @@ RTC_HandleTypeDef hrtc;
 
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
+DMA_HandleTypeDef hdma_spi1_rx;
+DMA_HandleTypeDef hdma_spi1_tx;
 
 UART_HandleTypeDef huart1;
 
@@ -62,6 +67,7 @@ UART_HandleTypeDef huart1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_RF_Init(void);
 static void MX_RTC_Init(void);
 static void MX_SPI1_Init(void);
@@ -80,9 +86,11 @@ static void MX_USART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 _Bool USB_new_command=0;
-char USB_command[20]="";
+char USB_command[30]="";
 char USB_parameter[6]="";
 uint32_t reg=0;
+
+
 /* USER CODE END 0 */
 
 /**
@@ -114,6 +122,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_RF_Init();
   MX_RTC_Init();
   MX_SPI1_Init();
@@ -132,20 +141,15 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
-  int data=0;
-  int predznak=1;
-  double ecg_voltage=0;
-  double r2r_old=0;
-  double r2r_new=0;
-  double hr=0;
 
-  int intb=3;
-  int int2b=3;
-  int etag=55;
-  int ReadRegisterValue=0;
-//USB_new_command=0;
-//USB_command[20]="";
-//USB_parameter[6]="";
+  char buffer[100]="";
+  int output_mode = 2;
+
+  //ICM-20948 initialisation
+  ICM_SelectBank(USER_BANK_0);
+  HAL_Delay(10);
+  ICM_PowerOn();
+  HAL_Delay(10);
 
   while (1)
   {
@@ -154,67 +158,57 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 	  if(USB_new_command){
-	  max30001_usb_init(USB_command, reg);
+		  if (strncmp(USB_command, "MAX", 3) == 0)
+			  max30001_usb_init(USB_command, reg);
+		  else if (strncmp(USB_command, "ICM", 3) == 0)
+			  icm_usb_init(USB_command, reg);
+		  else if (strncmp(USB_command, "MODE", 4) == 0)
+		  	  output_mode = change_output_mode(USB_command);
+		  else
+		  {
+				sprintf(buffer, "Wrong USB command\r\n");
+				CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer)); //ispis poruke na USB VCOM port
+		  }
 	  USB_new_command=0;
 	  }
 
-	  //	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-	  //	  printf("\n\r LED on\n\r");
-	  //	  for(int i=0;i<1000000;i++);
-	  //
-	  //	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-	  //	  printf("\n\r LED off\n\r");
-	  //	  for(int i=0;i<1000000;i++);
+	  switch (output_mode){
+	  	  case ECG_OUTPUT_MODE:
+	  		  ecg_output_mode();
+	  		  break;
+	  	  case BIOZ_OUTPUT_MODE:
+	  		  bioz_output_mode();
+	  		  break;
+	  	  case RTOR_OUTPUT_MODE:
+	  		  rtor_output_mode();
+	  		  break;
+	  	  case COMBINED_OUTPUT_MODE:
+	  		  combined_output_mode();
+	  		  break;
+	  	  case ACCEL_OUTPUT_MODE:
+	  		  accel_output_mode();
+	  		  break;
+	  	  case GYRO_OUTPUT_MODE:
+	  		  gyro_output_mode();
+	  		  break;
+	  	  case MAGN_OUTPUT_MODE:
+	  		  magn_output_mode();
+	  		  break;
+	  	  case TEMP_OUTPUT_MODE:
+	  		  temp_output_mode();
+	  		  break;
+	  	  case DSP_OUTPUT_MODE:
+	  		  IIR_PROCESSING_F32Process(TEST_MODE);
+	  		  FFT_PROCESSING_F32Process(TEST_MODE);
+	  		  break;
+	  	  case BPM_OUTPUT_MODE: //breaths per minute
+	  		  breathing_frequency_output();
+	  		  break;
+	  	  default:
+	  		  printf("No valid output mode selected!\r\n");
+	  		  break;
+	  }
 
-	  intb=HAL_GPIO_ReadPin(GPIOA, INTB_Pin);
-	  	//	if(intb!=1)printf("intb = %d\n",intb);
-	  		//int2b=HAL_GPIO_ReadPin(GPIOA, INT2B_Pin);
-	  		//if(int2b!=1)printf("int2b = %d\n",int2b);
-	  		if(intb != 1 ) //ako je neki od interrupt pinova low
-	  		{
-	  			//printf("intb = %d\r\n",intb);
-	  			if (max30001_int_handler() == -1)  //pozovi f-ju koja ce u ECG_FIFO_buffer preko SPI ucitati ECG_FIFO (32 odsjecka velicine 24 bita - 18 bit voltage data, 3 bit etag, 3 bit ptag)
-	  			{
-	  			//	printf("int_handler failed\r\n");
-	  			}
-	  			else
-	  			{
-	  				for (int indeks=0; indeks<16; indeks++)
-	  				{
-	  					data=max30001_ECG_FIFO_buffer[indeks];
-
-	  					etag=(data>>3)& 0x3; //izdvojim etag
-	  				//	printf("etag = %d\r\n",etag);
-
-	  					data=(data>>6) & 0x3ffff; //micem etag i ptag
-	  				//	printf("data = %d\r\n",data);
-
-	  					if(data & 0x20000)  //gledam 18. bit
-	  					{
-	  						predznak=-1;
-	  						data=(data^0x3ffff)+1;
-	  					}
-	  					else
-	  						predznak=1;
-
-	  					ecg_voltage=(double)(predznak)*(data*1000)/(pow(2,17)*20); //Vref=1000mV?, ecg gain=20V/V
-
-	  					//poslati taj data na uart
-	  					//printf("voltage data = %.3f \n\r",ecg_voltage);
-	  					//printf("%.3f\r\n",ecg_voltage);
-
-	  				//	r2r_new=hspValMax30001.R2R;
-	  					//hr=1/(r2r_new-r2r_old);
-	  				//	r2r_old=r2r_new;
-
-	  					//printf("r2r new = %f \r\n",r2r_new);
-	  					//printf("HR = %d \r\n",hr);
-	  				}
-
-	  			//	printf("int_handler  done\r\n");
-
-	  			}
-	  		}
   }
   /* USER CODE END 3 */
 }
@@ -359,10 +353,10 @@ static void MX_SPI1_Init(void)
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256; //bio je 8, ali stavio sam 256 da mogu debuggirat na svojem osciloskopu
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -402,7 +396,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256; // da se smanji clock na SPI prema MAX30001
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256; // da se smanji clock na SPI prema MAX30001;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -467,6 +461,26 @@ static void MX_USART1_UART_Init(void)
 
 }
 
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMAMUX1_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+
+}
+
 /**
   * @brief GPIO Initialization Function
   * @param None
@@ -500,7 +514,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB12 (NSS_SPI2_Pin) */
+  /*Configure GPIO pin : PB12  (NSS_SPI2_Pin)*/
   GPIO_InitStruct.Pin = GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -508,12 +522,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PB0 (Green LED) */
-    GPIO_InitStruct.Pin = GPIO_PIN_0;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
+     GPIO_InitStruct.Pin = GPIO_PIN_0;
+     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+     GPIO_InitStruct.Pull = GPIO_NOPULL;
+     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 /* USER CODE BEGIN 4 */

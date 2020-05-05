@@ -1204,6 +1204,7 @@ int max30001_FIFO_LeadONOff_Read() {
       dataAvailable(MAX30001_DATA_ECG, max30001_ECG_FIFO_buffer, (max30001_mngr_int.bit.e_fit + 1));
     }
 */
+    ret_val = 0;
   } 
 	/* End of ECG init */
 
@@ -1213,16 +1214,19 @@ int max30001_FIFO_LeadONOff_Read() {
   /* RtoR */
 
   if (max30001_status.bit.rrint == 1) {
+	  //printf("reading RTOR register\r\n");
     if (max30001_reg_read(RTOR, &max30001_RtoR_data) == -1) {
+      //printf("RTOR register read failed\r\n");
       return -1;
     }
 
     max30001_RtoR_data = (0x00FFFFFF & max30001_RtoR_data) >> 10;
-
+   // printf("RTOR data = %d\r\n",max30001_RtoR_data);
     hspValMax30001.R2R = (uint16_t)max30001_RtoR_data;
     hspValMax30001.fmstr = (uint16_t)max30001_cnfg_gen.bit.fmstr;
 
     dataAvailable(MAX30001_DATA_RTOR, &max30001_RtoR_data, 1);
+    ret_val = 1;
   }
 
   // Handling BIOZ data...
@@ -1234,11 +1238,14 @@ int max30001_FIFO_LeadONOff_Read() {
     /* [(BFIT+1)*3byte]+1extra byte due to the addr */
    //success = HAL_SPI_TransmitReceive(&hspi2, &data_array[0], &result[i_index], (data_chunk + 1), 0);
     //if (SPI_Transmit(&data_array[0], 1, &result[0],((max30001_mngr_int.bit.b_fit + 1) * 3) + 1) == -1) // Make a copy of the FIFO over here...
-    if (HAL_SPI_TransmitReceive(&hspi2, &data_array[0], &result[0], (((max30001_mngr_int.bit.b_fit + 1) * 3) + 1), 1000) ==  HAL_ERROR) // Make a copy of the FIFO over here...
-    //tu su razlicite duljine transmit i receive dijelova???
-		{
-      return -1;
-    }
+    HAL_GPIO_WritePin(GPIOB, NSS_SPI2_Pin, GPIO_PIN_RESET); //CS pin low
+    success = HAL_SPI_TransmitReceive(&hspi2, &data_array[0], &result[0], (((max30001_mngr_int.bit.b_fit + 1) * 3) + 1), 1000);  // Make a copy of the FIFO over here...
+	HAL_GPIO_WritePin(GPIOB, NSS_SPI2_Pin, GPIO_PIN_SET); //CS pin high
+    		//tu su razlicite duljine transmit i receive dijelova???
+    if (success != 0) {
+            return -1;
+          }
+
 
     btag = 0x07 & result[3]; //0b00000111
 
@@ -1252,9 +1259,10 @@ int max30001_FIFO_LeadONOff_Read() {
     if (btag != 6) { //0b110
       dataAvailable(MAX30001_DATA_BIOZ, max30001_BIOZ_FIFO_buffer, 8);
     }
+    ret_val = 0;
   }
 
-  ret_val = 0;
+
 /*
  if (max30001_status.bit.dcloffint == 1) // ECG/BIOZ Lead Off
   {
@@ -1362,9 +1370,10 @@ int max30001_int_handler() {
   // Inital Reset and any FIFO over flow invokes a FIFO reset
   // if (InitReset == 0 || max30001_status.bit.eovf == 1 || max30001_status.bit.bovf == 1) 
 	if (InitReset == 0 || max30001_status.bit.eovf == 1) { //bez BioZ overflow za sada
+ // if (InitReset == 0 ) { //bez BioZ i ECG overflow za sada
     // Do a FIFO Reset
     max30001_reg_write(FIFO_RST, 0x000000);
-//	printf("FIFO rst %d\r\n", InitReset);
+	printf("FIFO rst %d\r\n", InitReset);
     InitReset++;
     return 2;
   }
@@ -1601,13 +1610,13 @@ void MAX30001_init(void) {
 	 //Sets up the device for RtoR measurement
 
 	  	  	uint8_t Wndw = 3; 											//This is the width of the averaging window, which adjusts the algorithm sensitivity to the width of the QRS complex -> 0011 = 12 x RTOR_RES (default = 96ms)
-	  	  	uint8_t Gain_r2r = 16;										//R-to-R Gain -> 256? 2^RGAIN[3:0], plus an auto-scale option
+	  	  	uint8_t Gain_r2r = 15;										//R-to-R Gain -> autoscale (initial gain set to 64); 2^RGAIN[3:0], plus an auto-scale option
 	  	  	uint8_t Pavg = 2; 											//R-to-R Peak Averaging Weight Factor -> 8
 	  	  	uint8_t Ptsf = 3; 											//R-to-R Peak Threshold Scaling Factor -> 4/16
 	  	  	uint8_t Hoff = 32;											//R-to-R Minimum Hold Off -> 32
 	  	  	uint8_t Ravg = 2; 											//R-to-R Interval Averaging Weight Factor -> 8
 	  	  	uint8_t Rhsf = 4; 											//R-to-R Interval Hold Off Scaling Factor -> 4/8
-	  	  	uint8_t Clr_rrint = 0; 										//RTOR R Detect Interrupt (RRINT) Clear Behavior -> Clear RRINT on STATUS Register Read Back
+	  	  	uint8_t Clr_rrint = 1; 										//RTOR R Detect Interrupt (RRINT) Clear Behavior -> Clear RRINT on RTOR Register Read Back
 
 	  	  if(max30001_RtoR_InitStart(MAX30001_CHANNEL_ENABLED, Wndw, Gain_r2r,
 	  	                             Pavg, Ptsf, Hoff,
@@ -1635,7 +1644,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 //*************************REGISTER WRITE FUNCTIONS*****************************
 //**********EN_INT register*****************************************************
-	if (strncmp(USB_command, "EN_INT", 6) == 0){
+	if (strncmp(USB_command, "MAX_EN_INT1", 11) == 0){
 
 		sprintf(buffer, "Received EN_INT register write command = %.6s\r\n", USB_parameter);
 		printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -1679,7 +1688,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 	}
 //**********EN_INT2 register*****************************************************
-		if (strncmp(USB_command, "EN_INT2", 7) == 0){
+		if (strncmp(USB_command, "MAX_EN_INT2", 11) == 0){
 
 			sprintf(buffer, "Received EN_INT2 register write command = %.6s\r\n", USB_parameter);
 			printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -1724,7 +1733,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 		}
 
 //**********MNGR_INT register*****************************************************
-					if (strncmp(USB_command, "MNGR_INT", 8) == 0){
+					if (strncmp(USB_command, "MAX_MNGR_INT", 12) == 0){
 
 						sprintf(buffer, "Received MNGR_INT register write command = %.6s\r\n", USB_parameter);
 						printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -1769,7 +1778,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 					}
 
 //**********MNGR_DYN register*****************************************************
-			if (strncmp(USB_command, "MNGR_DYN", 8) == 0){
+			if (strncmp(USB_command, "MAX_MNGR_DYN", 12) == 0){
 
 				sprintf(buffer, "Received MNGR_DYN register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -1814,7 +1823,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 			}
 
 //**********CNFG_GEN register*****************************************************
-	if (strncmp(USB_command, "CNFG_GEN", 8) == 0){
+	if (strncmp(USB_command, "MAX_CNFG_GEN", 12) == 0){
 
 			sprintf(buffer, "Received CNFG_GEN register write command = %.6s\r\n", USB_parameter);
 			printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -1859,7 +1868,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 		}
 
 //**********CNFG_CAL register*****************************************************
-		if (strncmp(USB_command, "CNFG_CAL", 8) == 0){
+		if (strncmp(USB_command, "MAX_CNFG_CAL", 12) == 0){
 
 				sprintf(buffer, "Received CNFG_CAL register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -1904,7 +1913,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 			}
 
 //**********CNFG_EMUX register*****************************************************
-		if (strncmp(USB_command, "CNFG_EMUX", 9) == 0){
+		if (strncmp(USB_command, "MAX_CNFG_EMUX", 13) == 0){
 
 				sprintf(buffer, "Received CNFG_EMUX register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -1949,7 +1958,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 			}
 
 //**********CNFG_ECG register*****************************************************
-		if (strncmp(USB_command, "CNFG_ECG", 8) == 0){
+		if (strncmp(USB_command, "MAX_CNFG_ECG", 12) == 0){
 
 				sprintf(buffer, "Received CNFG_ECG register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -1994,7 +2003,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 			}
 
 //**********CNFG_BMUX register*****************************************************
-		if (strncmp(USB_command, "CNFG_BMUX", 9) == 0){
+		if (strncmp(USB_command, "MAX_CNFG_BMUX", 13) == 0){
 
 				sprintf(buffer, "Received CNFG_BMUX register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2039,7 +2048,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 			}
 
 //**********CNFG_BIOZ register*****************************************************
-		if (strncmp(USB_command, "CNFG_BIOZ", 9) == 0){
+		if (strncmp(USB_command, "MAX_CNFG_BIOZ", 13) == 0){
 
 				sprintf(buffer, "Received CNFG_BIOZ register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2084,7 +2093,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 			}
 
 //**********CNFG_PACE register*****************************************************
-		if (strncmp(USB_command, "CNFG_PACE", 9) == 0){
+		if (strncmp(USB_command, "MAX_CNFG_PACE", 13) == 0){
 
 				sprintf(buffer, "Received CNFG_PACE register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2129,7 +2138,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 			}
 
 //**********CNFG_RTOR1 register*****************************************************
-		if (strncmp(USB_command, "CNFG_RTOR1", 10) == 0){
+		if (strncmp(USB_command, "MAX_CNFG_RTOR1", 14) == 0){
 
 				sprintf(buffer, "Received CNFG_RTOR1 register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2174,7 +2183,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 			}
 
 //**********CNFG_RTOR2 register*****************************************************
-		if (strncmp(USB_command, "CNFG_RTOR2", 10) == 0){
+		if (strncmp(USB_command, "MAX_CNFG_RTOR2", 14) == 0){
 
 				sprintf(buffer, "Received CNFG_RTOR2 register write command = %.6s\r\n", USB_parameter);
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2220,7 +2229,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 //*************************QUICK COMMANDS FUNCTIONS*****************************
 //*******************************SW RESET***************************************
-		if (strncmp(USB_command, "SW_RESET", 8) == 0){
+		if (strncmp(USB_command, "MAX_SW_RESET", 12) == 0){
 
 				sprintf(buffer, "Received SW reset command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2242,7 +2251,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************SYNCHRONIZE***************************************
-		if (strncmp(USB_command, "SYNCH", 5) == 0){
+		if (strncmp(USB_command, "MAX_SYNCH", 9) == 0){
 
 				sprintf(buffer, "Received synchronize command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2264,7 +2273,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************FIFO RESET***************************************
-		if (strncmp(USB_command, "FIFO_RST", 8) == 0){
+		if (strncmp(USB_command, "MAX_FIFO_RST", 12) == 0){
 
 				sprintf(buffer, "Received FIFO reset command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2286,7 +2295,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************ECG STOP***************************************
-		if (strncmp(USB_command, "ECG_STOP", 8) == 0){
+		if (strncmp(USB_command, "MAX_ECG_STOP", 12) == 0){
 
 				sprintf(buffer, "Received ECG STOP command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2308,7 +2317,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************BIOZ STOP***************************************
-		if (strncmp(USB_command, "BIOZ_STOP", 9) == 0){
+		if (strncmp(USB_command, "MAX_BIOZ_STOP", 13) == 0){
 
 				sprintf(buffer, "Received BIOZ STOP command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2330,7 +2339,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************RTOR STOP***************************************
-		if (strncmp(USB_command, "RTOR_STOP", 9) == 0){
+		if (strncmp(USB_command, "MAX_RTOR_STOP", 13) == 0){
 
 				sprintf(buffer, "Received RTOR STOP command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2352,7 +2361,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************ECG START***************************************
-		if (strncmp(USB_command, "ECG_START", 9) == 0){
+		if (strncmp(USB_command, "MAX_ECG_START", 13) == 0){
 
 				sprintf(buffer, "Received ECG START command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2374,7 +2383,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************BIOZ START***************************************
-		if (strncmp(USB_command, "BIOZ_START", 10) == 0){
+		if (strncmp(USB_command, "MAX_BIOZ_START", 14) == 0){
 
 				sprintf(buffer, "Received BIOZ START command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2396,7 +2405,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************RTOR START***************************************
-		if (strncmp(USB_command, "RTOR_START", 10) == 0){
+		if (strncmp(USB_command, "MAX_RTOR_START", 14) == 0){
 
 				sprintf(buffer, "Received RTOR START command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
@@ -2418,7 +2427,7 @@ void max30001_usb_init(char *USB_command, uint32_t regvalue){
 
 			}
 //*******************************READ STATUS REGISTER***************************************
-		if (strncmp(USB_command, "STATUS", 6) == 0){
+		if (strncmp(USB_command, "MAX_STATUS", 10) == 0){
 
 				sprintf(buffer, "Received read STATUS register command\r\n");
 				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
