@@ -8,6 +8,7 @@
 #ifndef INC_BPM_CALC_H_
 #define INC_BPM_CALC_H_
 
-void breathing_frequency_output(void);
-
+float breathing_frequency_output(int mode);
+float breathing_frequency_output_V2(int mode);
+void bpm_calc_init(void);
 #endif /* INC_BPM_CALC_H_ */

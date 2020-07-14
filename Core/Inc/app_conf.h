@@ -6,7 +6,7 @@
  ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under Ultimate Liberty license
@@ -39,11 +39,11 @@
 /**
  * Define Advertising parameters
  */
-#define CFG_ADV_BD_ADDRESS                (0)
+#define CFG_ADV_BD_ADDRESS                (0x7257acd87a6c)
 #define CFG_FAST_CONN_ADV_INTERVAL_MIN    (0x80)   /**< 80ms */
-#define CFG_FAST_CONN_ADV_INTERVAL_MAX    (0xA0)  /**< 100ms */
+#define CFG_FAST_CONN_ADV_INTERVAL_MAX    (0xa0)  /**< 100ms */
 #define CFG_LP_CONN_ADV_INTERVAL_MIN      (0x640) /**< 1s */
-#define CFG_LP_CONN_ADV_INTERVAL_MAX      (0xFA0) /**< 2.5s */
+#define CFG_LP_CONN_ADV_INTERVAL_MAX      (0xfa0) /**< 2.5s */
 
 /**
  * Define IO Authentication
@@ -95,50 +95,21 @@
 #define CFG_BLE_ERK     {0xfe,0xdc,0xba,0x09,0x87,0x65,0x43,0x21,0xfe,0xdc,0xba,0x09,0x87,0x65,0x43,0x21}
 
 /* USER CODE BEGIN Generic_Parameters */
-
+/**
+ * SMPS supply
+ * SMPS not used when Set to 0
+ * SMPS used when Set to 1
+ */
+#define CFG_USE_SMPS    1
 /* USER CODE END Generic_Parameters */
 
 /**< specific parameters */
 /*****************************************************/
-#define PUSH_BUTTON_SW1_EXTI_IRQHandler                         EXTI4_IRQHandler
-#define PUSH_BUTTON_SW2_EXTI_IRQHandler                         EXTI0_IRQHandler
-
-#define P2P_SERVER1    1    /*1 = Device is Peripherique*/
-#define P2P_SERVER2    0
-#define P2P_SERVER3    0
-#define P2P_SERVER4    0
-#define P2P_SERVER5    0
-#define P2P_SERVER6    0
-
-#define CFG_DEV_ID_P2P_SERVER1                  (0x83)
-#define CFG_DEV_ID_P2P_SERVER2                  (0x84)
-#define CFG_DEV_ID_P2P_SERVER3                  (0x87)
-#define CFG_DEV_ID_P2P_SERVER4                  (0x88)
-#define CFG_DEV_ID_P2P_SERVER5                  (0x89)   
-#define CFG_DEV_ID_P2P_SERVER6                  (0x8A)   
-#define CFG_DEV_ID_P2P_ROUTER                   (0x85)
-
-#define  RADIO_ACTIVITY_EVENT   1          /* 1 for OOB Demo */
-
 /**
 * AD Element - Group B Feature
 */ 
-/* LSB - First Byte */
-#define CFG_FEATURE_THREAD_SWITCH               (0x40)
-
 /* LSB - Second Byte */
 #define CFG_FEATURE_OTA_REBOOT                  (0x20)
-
-#define CONN_L(x) ((int)((x)/0.625f))
-#define CONN_P(x) ((int)((x)/1.25f))
-
-  /*  L2CAP Connection Update request parameters used for test only with smart Phone */
-#define L2CAP_REQUEST_NEW_CONN_PARAM             0
-
-#define L2CAP_INTERVAL_MIN              CONN_P(1000) /* 1s */
-#define L2CAP_INTERVAL_MAX              CONN_P(1000) /* 1s */
-#define L2CAP_SLAVE_LATENCY             0x0000
-#define L2CAP_TIMEOUT_MULTIPLIER        0x1F4
 
 /******************************************************************************
  * BLE Stack
@@ -281,7 +252,7 @@
 /**
  * Select UART interfaces
  */
-#define CFG_DEBUG_TRACE_UART    
+#define CFG_DEBUG_TRACE_UART    hw_uart1
 #define CFG_CONSOLE_MENU      
 /******************************************************************************
  * USB interface
@@ -294,12 +265,12 @@
 
 /******************************************************************************
  * Low Power
-******************************************************************************/
+ ******************************************************************************/
 /**
  *  When set to 1, the low power mode is enable
  *  When set to 0, the device stays in RUN mode
  */
-#define CFG_LPM_SUPPORTED    0
+#define CFG_LPM_SUPPORTED    0 //bilo je 1 u originalu
 
 /******************************************************************************
  * Timer Server
@@ -397,17 +368,17 @@ typedef enum
  * keep debugger enabled while in any low power mode when set to 1
  * should be set to 0 in production
  */
-#define CFG_DEBUGGER_SUPPORTED    1
+#define CFG_DEBUGGER_SUPPORTED    1  //ovo sam stavio u 1 jer debug nije radio/cudno se ponasao i nisam mogao flashati iz STM32CUBE nego samo iz Keila
 
 /**
  * When set to 1, the traces are enabled in the BLE services
  */
-#define CFG_DEBUG_BLE_TRACE     0
+#define CFG_DEBUG_BLE_TRACE     1 //stavljeno na 1
 
 /**
  * Enable or Disable traces in application
  */
-#define CFG_DEBUG_APP_TRACE     0
+#define CFG_DEBUG_APP_TRACE     1 //stavljeno na 1
 
 #if (CFG_DEBUG_APP_TRACE != 0)
 #define APP_DBG_MSG                 PRINT_MESG_DBG
@@ -416,7 +387,7 @@ typedef enum
 #endif
 
 #if ( (CFG_DEBUG_BLE_TRACE != 0) || (CFG_DEBUG_APP_TRACE != 0) )
-#define CFG_DEBUG_TRACE             1
+#define CFG_DEBUG_TRACE             0 //stavljeno na 0
 #endif
 
 #if (CFG_DEBUG_TRACE != 0)
@@ -433,7 +404,7 @@ typedef enum
  * When both are set to 0, no trace are output
  * When both are set to 1,  CFG_DEBUG_TRACE_FULL is selected
  */
-#define CFG_DEBUG_TRACE_LIGHT     0
+#define CFG_DEBUG_TRACE_LIGHT     1
 #define CFG_DEBUG_TRACE_FULL      0
 
 #if (( CFG_DEBUG_TRACE != 0 ) && ( CFG_DEBUG_TRACE_LIGHT == 0 ) && (CFG_DEBUG_TRACE_FULL == 0))
@@ -463,7 +434,12 @@ typedef enum
 #define MAX_DBG_TRACE_MSG_SIZE 1024
 
 /* USER CODE BEGIN Defines */
+#define CFG_LED_SUPPORTED         0
+#define CFG_BUTTON_SUPPORTED      0
 
+#define PUSH_BUTTON_SW1_EXTI_IRQHandler     EXTI4_IRQHandler
+#define PUSH_BUTTON_SW2_EXTI_IRQHandler     EXTI0_IRQHandler
+#define PUSH_BUTTON_SW3_EXTI_IRQHandler     EXTI1_IRQHandler
 /* USER CODE END Defines */
 
 /******************************************************************************
@@ -476,12 +452,34 @@ typedef enum
  * This mechanism allows to implement a generic code in the API TL_BLE_HCI_StatusNot() to comply with
  * the requirement that a HCI/ACI command shall never be sent if there is already one pending
  */
-
+//CFG_TASK_CONN_MGR_ID,
+//CFG_TASK_CRC_DISCOVERY_REQ_ID,
+//CFG_TASK_SCAN_REQ_ID,
+//CFG_TASK_CONN_REQ_ID,
+//CFG_TASK_MAX30001_DATA_READOUT,  //dodano
+//CFG_TASK_CRS_UPDATE_REQ_ID,
+//CFG_TASK_HCI_ASYNCH_EVT_ID,
 /**< Add in that list all tasks that may send a ACI/HCI command */
 typedef enum
 {
-    CFG_TASK_ADV_CANCEL_ID,
-    CFG_TASK_SW1_BUTTON_PUSHED_ID,
+    CFG_TASK_ADV_UPDATE_ID,
+    CFG_TASK_MEAS_REQ_ID,
+//	CFG_TASK_MAX30001_DATA_READOUT,  //dodano
+	CFG_TASK_USB_COMMAND,
+	CFG_TASK_ECG_OUTPUT_MODE,
+	CFG_TASK_BIOZ_OUTPUT_MODE,
+	CFG_TASK_RTOR_OUTPUT_MODE,
+	CFG_TASK_COMBINED_OUTPUT_MODE,
+	CFG_TASK_ACCEL_OUTPUT_MODE,
+	CFG_TASK_GYRO_OUTPUT_MODE,
+	CFG_TASK_MAGN_OUTPUT_MODE,
+	CFG_TASK_TEMP_OUTPUT_MODE,
+	CFG_TASK_DSP_OUTPUT_MODE,
+	CFG_TASK_BPM_OUTPUT_MODE,
+	CFG_TASK_HR_ECG_OUTPUT_MODE,
+	CFG_TASK_BPM60_BIOZ_OUTPUT_MODE,
+	CFG_TASK_BPM30_BIOZ_OUTPUT_MODE,
+	CFG_TASK_CRS_UPDATE_REQ_ID,
     CFG_TASK_HCI_ASYNCH_EVT_ID,
 /* USER CODE BEGIN CFG_Task_Id_With_HCI_Cmd_t */
 

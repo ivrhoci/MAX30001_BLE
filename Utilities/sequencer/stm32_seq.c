@@ -10,7 +10,7 @@
  * All rights reserved.</center></h2>
  *
  * This software component is licensed by ST under BSD 3-Clause license,
- * the "License"; You may not use this file except in compliance with the 
+ * the "License"; You may not use this file except in compliance with the
  * License. You may obtain a copy of the License at:
  *                        opensource.org/licenses/BSD-3-Clause
  *
@@ -47,15 +47,15 @@ uint32_t round_robin;
 #endif
 
 /*default number of task is default 32 (maximum), can be reduced by redefining in utilities_conf.h*/
-#ifndef UTIL_SEQ_CONF_TASK_NBR 
+#ifndef UTIL_SEQ_CONF_TASK_NBR
 	#define UTIL_SEQ_CONF_TASK_NBR  (32)
-#endif 
+#endif
 
 #if UTIL_SEQ_CONF_TASK_NBR > 32
 #error "UTIL_SEQ_CONF_PRIO_NBR must be less of equal then 32"
 #endif
-  
-#ifndef UTIL_SEQ_CONF_PRIO_NBR 
+
+#ifndef UTIL_SEQ_CONF_PRIO_NBR
   #define UTIL_SEQ_CONF_PRIO_NBR  (2)
 #endif
 
@@ -176,14 +176,14 @@ void UTIL_SEQ_Run( UTIL_SEQ_bm_t mask_bm )
   }
 
   UTIL_SEQ_PreIdle( );
-  
+
   UTIL_SEQ_ENTER_CRITICAL_SECTION( );
   if (!((TaskSet & TaskMask & SuperMask) || (EvtSet & EvtWaited)))
   {
     UTIL_SEQ_Idle( );
   }
   UTIL_SEQ_EXIT_CRITICAL_SECTION( );
-  
+
   UTIL_SEQ_PostIdle( );
 
   /** restore the mask from UTIL_SEQ_Run() */
@@ -289,7 +289,7 @@ void UTIL_SEQ_WaitEvt( UTIL_SEQ_bm_t evt_id_bm )
    *  may be overwritten in case there are nested call of UTIL_SEQ_Run()
    */
   current_task_id_bm = (1 << CurrentTaskIdx);
-
+//printf("cekam\r\n");
   /** backup the event id that was currently waited */
   event_waited_id_backup = EvtWaited;
   EvtWaited = evt_id_bm;
@@ -356,7 +356,7 @@ __WEAK void UTIL_SEQ_PostIdle( void )
 }
 
 #if( __CORTEX_M == 0)
-static const uint8_t clz_table_4bit[16] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };	
+static const uint8_t clz_table_4bit[16] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 static uint32_t bit_position(uint32_t value)
 {
 

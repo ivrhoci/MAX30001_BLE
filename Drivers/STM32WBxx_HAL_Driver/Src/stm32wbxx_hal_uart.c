@@ -3228,7 +3228,8 @@ HAL_StatusTypeDef UART_WaitOnFlagUntilTimeout(UART_HandleTypeDef *huart, uint32_
   while ((__HAL_UART_GET_FLAG(huart, Flag) ? SET : RESET) == Status)
   {
     /* Check for the Timeout */
-    if (Timeout != HAL_MAX_DELAY)
+
+	  if (Timeout != HAL_MAX_DELAY)
     {
       if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
       {

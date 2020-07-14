@@ -431,13 +431,12 @@
 int max30001_Rbias_FMSTR_Init(uint8_t En_rbias, uint8_t Rbiasv,
                                         uint8_t Rbiasp, uint8_t Rbiasn,
                                         uint8_t Fmstr) {
+  max30001_cnfg_gen.all=0;
   if (max30001_reg_read(CNFG_GEN, &max30001_cnfg_gen.all) == -1) {
     return -1;
   }
-	else
-	{
-		//printf("max30001_cnfg_gen.bit.rbiasv = %d\n",max30001_cnfg_gen.bit.rbiasv);
-	}
+  printf("CNFG_GEN register prije pisanja: %d\r\n",max30001_cnfg_gen.all);
+
   max30001_cnfg_gen.bit.en_rbias = En_rbias;
   max30001_cnfg_gen.bit.rbiasv   = Rbiasv;
   max30001_cnfg_gen.bit.rbiasp   = Rbiasp;
@@ -447,18 +446,13 @@ int max30001_Rbias_FMSTR_Init(uint8_t En_rbias, uint8_t Rbiasv,
   if (max30001_reg_write(CNFG_GEN, max30001_cnfg_gen.all) == -1) {
     return -1;
   }
-	else
-	{
-		//printf("max30001_cnfg_gen.bit.rbiasv = %d\n",max30001_cnfg_gen.bit.rbiasv);
-	}
 	
-	if (max30001_reg_read(CNFG_GEN, &max30001_cnfg_gen.all) == -1) {
+  max30001_cnfg_gen.all=0;
+  if (max30001_reg_read(CNFG_GEN, &max30001_cnfg_gen.all) == -1) {
     return -1;
   }
-	else
-	{
-		//printf("max30001_cnfg_gen.bit.rbiasv = %d\n",max30001_cnfg_gen.bit.rbiasv);
-	}
+  printf("CNFG_GEN register nakon pisanja: %d\r\n",max30001_cnfg_gen.all);
+
 	
   return 0;
 }
@@ -530,11 +524,11 @@ int max30001_INT_assignment(max30001_intrpt_Location_t en_enint_loc,     max3000
 
 {
   // INT1
-
+  max30001_en_int.all=0;
   if (max30001_reg_read(EN_INT, &max30001_en_int.all) == -1) {
     return -1;
   }
-
+  printf("EN_INT register prije pisanja: %d\r\n",max30001_en_int.all);
   // max30001_en_int2.bit.en_pint       = 0b1;  // Keep this off...
 
   max30001_en_int.bit.en_eint = 1 & en_enint_loc;
@@ -563,11 +557,17 @@ int max30001_INT_assignment(max30001_intrpt_Location_t en_enint_loc,     max3000
     return -1;
   }
 
+  max30001_en_int.all=0;
+  if (max30001_reg_read(EN_INT, &max30001_en_int.all) == -1) {
+    return -1;
+  }
+  printf("EN_INT register nakon pisanja: %d\r\n",max30001_en_int.all);
   // INT2
-
+  max30001_en_int2.all=0;
   if (max30001_reg_read(EN_INT2, &max30001_en_int2.all) == -1) {
     return -1;
   }
+  printf("EN_INT2 register prije pisanja: %d\r\n",max30001_en_int2.all);
 
   max30001_en_int2.bit.en_eint   = 1 & (en_enint_loc >> 1);
   max30001_en_int2.bit.en_eovf   = 1 & (en_eovf_loc >> 1);
@@ -595,6 +595,12 @@ int max30001_INT_assignment(max30001_intrpt_Location_t en_enint_loc,     max3000
     return -1;
   }
 
+  max30001_en_int2.all=0;
+  if (max30001_reg_read(EN_INT2, &max30001_en_int2.all) == -1) {
+    return -1;
+  }
+  printf("EN_INT2 register nakon pisanja: %d\r\n",max30001_en_int2.all);
+
   return 0;
 }
 
@@ -606,7 +612,7 @@ int max30001_ECG_InitStart(uint8_t En_ecg, uint8_t Openp,
                                      uint8_t Dhpf, uint8_t Dlpf) {
 
   // CNFG_EMUX
-
+	max30001_cnfg_emux.all=0;
   if (max30001_reg_read(CNFG_EMUX, &max30001_cnfg_emux.all) == -1) {
     return -1;
   }
@@ -622,7 +628,7 @@ int max30001_ECG_InitStart(uint8_t En_ecg, uint8_t Openp,
     return -1;
   }
 
-
+  max30001_cnfg_emux.all=0;
   //*****************************************************
   if (max30001_reg_read(CNFG_EMUX, &max30001_cnfg_emux.all) == -1) {
      return -1;
@@ -631,7 +637,7 @@ int max30001_ECG_InitStart(uint8_t En_ecg, uint8_t Openp,
 
   /**** ENABLE CHANNELS ****/
   // CNFG_GEN
-
+   max30001_cnfg_gen.all=0;
   if (max30001_reg_read(CNFG_GEN, &max30001_cnfg_gen.all) == -1) {
     return -1;
   }
@@ -646,6 +652,7 @@ int max30001_ECG_InitStart(uint8_t En_ecg, uint8_t Openp,
   }
 
   //*****************************************************
+  max30001_cnfg_gen.all=0;
   if (max30001_reg_read(CNFG_GEN, &max30001_cnfg_gen.all) == -1) {
      return -1;
    }
@@ -661,13 +668,16 @@ int max30001_ECG_InitStart(uint8_t En_ecg, uint8_t Openp,
     {
       return -1;
     }
-  } while (max30001_status.bit.pllint == 1 && max30001_timeout++ <= 1000);
+    if (max30001_status.bit.pllint == 0)
+    	printf("pllint = 0\r\n");
+  } while (max30001_status.bit.pllint == 1 && max30001_timeout++ <= 50000);//ovo je u originalu islo do 1000
 
   // MNGR_INT
-
+  max30001_mngr_int.all=0;
   if (max30001_reg_read(MNGR_INT, &max30001_mngr_int.all) == -1) {
     return -1;
   }
+  printf("MNGR_INT register prije pisanja: %d\r\n",max30001_mngr_int.all);
 
   max30001_mngr_int.bit.e_fit = E_fit; // 31
 
@@ -675,11 +685,17 @@ int max30001_ECG_InitStart(uint8_t En_ecg, uint8_t Openp,
     return -1;
   }
 
+  max30001_mngr_int.all=0;
+  if (max30001_reg_read(MNGR_INT, &max30001_mngr_int.all) == -1) {
+    return -1;
+  }
+  printf("MNGR_INT register nakon pisanja: %d\r\n",max30001_mngr_int.all);
   // CNFG_ECG
-
+  max30001_cnfg_ecg.all=0;
   if (max30001_reg_read(CNFG_ECG, &max30001_cnfg_ecg.all) == -1) {
     return -1;
   }
+  printf("CNFG_ECG register prije pisanja: %d\r\n",max30001_cnfg_ecg.all);
 
   max30001_cnfg_ecg.bit.rate = Rate; 
   max30001_cnfg_ecg.bit.gain = Gain;
@@ -689,6 +705,12 @@ int max30001_ECG_InitStart(uint8_t En_ecg, uint8_t Openp,
   if (max30001_reg_write(CNFG_ECG, max30001_cnfg_ecg.all) == -1) {
     return -1;
   }
+
+  max30001_cnfg_ecg.all=0;
+  if (max30001_reg_read(CNFG_ECG, &max30001_cnfg_ecg.all) == -1) {
+    return -1;
+  }
+  printf("CNFG_ECG register nakon pisanja: %d\r\n",max30001_cnfg_ecg.all);
 
   return 0;
 }
@@ -767,10 +789,11 @@ int max30001_BIOZ_InitStart(
     uint8_t Fcgen, uint8_t Cgmon, uint8_t Cgmag, uint8_t Phoff, uint8_t Inapow_mode) {
 
   // CNFG_BMUX
-
+  max30001_cnfg_bmux.all=0;
   if (max30001_reg_read(CNFG_BMUX, &max30001_cnfg_bmux.all) == -1) {
     return -1;
   }
+  printf("CNFG_BMUX register prije pisanja: %d\r\n",max30001_cnfg_bmux.all);
 
   max30001_cnfg_bmux.bit.openp    = Openp;       // 1;
   max30001_cnfg_bmux.bit.openn    = Openn;       // 1;
@@ -782,13 +805,20 @@ int max30001_BIOZ_InitStart(
     return -1;
   }
 
+  max30001_cnfg_bmux.all=0;
+  if (max30001_reg_read(CNFG_BMUX, &max30001_cnfg_bmux.all) == -1) {
+    return -1;
+  }
+  printf("CNFG_BMUX register nakon pisanja: %d\r\n",max30001_cnfg_bmux.all);
+
   /**** SET MASTER FREQUENCY, ENABLE CHANNELS ****/
 
   // CNFG_GEN
-
+  max30001_cnfg_gen.all=0;
   if (max30001_reg_read(CNFG_GEN, &max30001_cnfg_gen.all) == -1) {
     return -1;
   }
+  printf("CNFG_GEN register prije pisanja: %d\r\n",max30001_cnfg_gen.all);
 
   max30001_cnfg_gen.bit.en_bioz = En_bioz;
 
@@ -798,26 +828,34 @@ int max30001_BIOZ_InitStart(
     return -1;
   }
 
+  max30001_cnfg_gen.all=0;
+  if (max30001_reg_read(CNFG_GEN, &max30001_cnfg_gen.all) == -1) {
+    return -1;
+  }
+  printf("CNFG_GEN register nakon pisanja: %d\r\n",max30001_cnfg_gen.all);
+
   /**** Wait for PLL Lock & References to settle down ****/
 
   max30001_timeout = 0;
 
   do {
-    if (max30001_reg_read(STATUS, &max30001_status.all) ==
-        -1) // Wait and spin for PLL to lock...
+    if (max30001_reg_read(STATUS, &max30001_status.all) == -1) // Wait and spin for PLL to lock...
     {
       return -1;
     }
+    if (max30001_status.bit.pllint == 0)
+    	printf("pllint = 0\r\n");
 
   } while (max30001_status.bit.pllint == 1 && max30001_timeout++ <= 1000);
 
   /**** Start of CNFG_BIOZ ****/
 
   // MNGR_INT
-
+  max30001_mngr_int.all=0;
   if (max30001_reg_read(MNGR_INT, &max30001_mngr_int.all) == -1) {
     return -1;
   }
+  printf("MNGR_INT register prije pisanja: %d\r\n",max30001_mngr_int.all);
 
   max30001_mngr_int.bit.b_fit = B_fit; //;
 
@@ -825,11 +863,18 @@ int max30001_BIOZ_InitStart(
     return -1;
   }
 
-  // CNFG_BIOZ
+  max30001_mngr_int.all=0;
+  if (max30001_reg_read(MNGR_INT, &max30001_mngr_int.all) == -1) {
+    return -1;
+  }
+  printf("MNGR_INT register nakon pisanja: %d\r\n",max30001_mngr_int.all);
 
+  // CNFG_BIOZ
+  max30001_cnfg_bioz.all=0;
   if (max30001_reg_read(CNFG_BIOZ, &max30001_cnfg_bioz.all) == -1) {
     return -1;
   }
+  printf("CNFG_BIOZ register prije pisanja: %d\r\n",max30001_cnfg_bioz.all);
 
   max30001_cnfg_bioz.bit.rate      = Rate;
   max30001_cnfg_bioz.bit.ahpf      = Ahpf;
@@ -846,6 +891,12 @@ int max30001_BIOZ_InitStart(
   if (max30001_reg_write(CNFG_BIOZ, max30001_cnfg_bioz.all) == -1) {
     return -1;
   }
+
+  max30001_cnfg_bioz.all=0;
+  if (max30001_reg_read(CNFG_BIOZ, &max30001_cnfg_bioz.all) == -1) {
+    return -1;
+  }
+  printf("CNFG_BIOZ register nakon pisanja: %d\r\n",max30001_cnfg_bioz.all);
 
   return 0;
 }
@@ -912,23 +963,30 @@ int max30001_RtoR_InitStart(uint8_t En_rtor, uint8_t Wndw,
                                       uint8_t Clr_rrint) {
 
   // MNGR_INT
-
+  max30001_mngr_int.all=0;
   if (max30001_reg_read(MNGR_INT, &max30001_mngr_int.all) == -1) {
     return -1;
   }
+  printf("MNGR_INT register prije pisanja: %d\r\n",max30001_mngr_int.all);
 
-  max30001_mngr_int.bit.clr_rrint =
-      Clr_rrint; // 0b01 & 0b00 are for interrupt mode...
+  max30001_mngr_int.bit.clr_rrint = Clr_rrint; // 0b01 & 0b00 are for interrupt mode...
   // 0b10 is for monitoring mode... it just overwrites the data...
 
   if (max30001_reg_write(MNGR_INT, max30001_mngr_int.all) == -1) {
     return -1;
   }
+  max30001_mngr_int.all=0;
+  if (max30001_reg_read(MNGR_INT, &max30001_mngr_int.all) == -1) {
+    return -1;
+  }
+  printf("MNGR_INT register nakon pisanja: %d\r\n",max30001_mngr_int.all);
 
   // RTOR1
+  max30001_cnfg_rtor1.all=0;
   if (max30001_reg_read(CNFG_RTOR1, &max30001_cnfg_rtor1.all) == -1) {
     return -1;
   }
+  printf("CNFG_RTOR1 register prije pisanja: %d\r\n",max30001_cnfg_rtor1.all);
 
   max30001_cnfg_rtor1.bit.wndw = Wndw;
   max30001_cnfg_rtor1.bit.gain = Gain;
@@ -939,11 +997,20 @@ int max30001_RtoR_InitStart(uint8_t En_rtor, uint8_t Wndw,
   if (max30001_reg_write(CNFG_RTOR1, max30001_cnfg_rtor1.all) == -1) {
     return -1;
   }
-  // RTOR2
 
+  max30001_cnfg_rtor1.all=0;
+  if (max30001_reg_read(CNFG_RTOR1, &max30001_cnfg_rtor1.all) == -1) {
+    return -1;
+  }
+  printf("CNFG_RTOR1 register nakon pisanja: %d\r\n",max30001_cnfg_rtor1.all);
+
+  // RTOR2
+  max30001_cnfg_rtor2.all=0;
   if (max30001_reg_read(CNFG_RTOR2, &max30001_cnfg_rtor2.all) == -1) {
     return -1;
   }
+  printf("CNFG_RTOR2 register prije pisanja: %d\r\n",max30001_cnfg_rtor2.all);
+
   max30001_cnfg_rtor2.bit.hoff = Hoff;
   max30001_cnfg_rtor2.bit.ravg = Ravg;
   max30001_cnfg_rtor2.bit.rhsf = Rhsf;
@@ -951,6 +1018,12 @@ int max30001_RtoR_InitStart(uint8_t En_rtor, uint8_t Wndw,
   if (max30001_reg_write(CNFG_RTOR2, max30001_cnfg_rtor2.all) == -1) {
     return -1;
   }
+
+  max30001_cnfg_rtor2.all=0;
+  if (max30001_reg_read(CNFG_RTOR2, &max30001_cnfg_rtor2.all) == -1) {
+    return -1;
+  }
+  printf("CNFG_RTOR2 register nakon pisanja: %d\r\n",max30001_cnfg_rtor2.all);
 
   return 0;
 }
@@ -1530,8 +1603,8 @@ void MAX30001_init(void) {
 	  		max30001_intrpt_Location_t en_lonint_loc = MAX30001_NO_INT;
 	        max30001_intrpt_Location_t en_rrint_loc = MAX30001_INT_B;    	// ECG R-to-R Detector R Event Interrupt -> INT_B
 	  		max30001_intrpt_Location_t en_samp_loc = MAX30001_NO_INT;
-	  		max30001_intrpt_type_t  intb_Type = MAX30001_INT_ODNR; 			//Open-Drain NMOS Driver with Internal 125kO Pullup Resistance for INTB
-	  		max30001_intrpt_type_t int2b_Type = MAX30001_INT_ODNR; 			//Open-Drain NMOS Driver with Internal 125kO Pullup Resistance for INT2B
+	  		max30001_intrpt_type_t  intb_Type = MAX30001_INT_ODNR; 			//Open-Drain NMOS Driver for INTB + pull up
+	  		max30001_intrpt_type_t int2b_Type = MAX30001_INT_ODNR; 			//Open-Drain NMOS Driver for INT2B + pull up
 
 	  	  if(max30001_INT_assignment(en_enint_loc, en_eovf_loc, en_fstint_loc,
 	  								 en_dcloffint_loc, en_bint_loc,  en_bovf_loc,

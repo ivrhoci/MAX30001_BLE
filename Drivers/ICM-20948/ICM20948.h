@@ -115,6 +115,7 @@ extern float temp_data;
 void ICM_PowerOn();
 uint8_t ICM_WHOAMI(void);
 void ICM_SelectBank(uint8_t bank);
+void ICM_ReadOneByte(uint8_t reg, uint8_t* pData);
 void ICM_ReadAccelGyro(void);
 void ICM_ReadMag(void);
 uint16_t ICM_Initialize(void);

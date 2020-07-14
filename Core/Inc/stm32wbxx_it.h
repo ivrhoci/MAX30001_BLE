@@ -61,7 +61,9 @@ void DMA1_Channel2_IRQHandler(void);
 void USB_LP_IRQHandler(void);
 void USART1_IRQHandler(void);
 /* USER CODE BEGIN EFP */
-
+void RTC_WKUP_IRQHandler(void);
+void IPCC_C1_TX_IRQHandler(void);
+void IPCC_C1_RX_IRQHandler(void);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

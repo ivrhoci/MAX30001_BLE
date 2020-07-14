@@ -83,7 +83,8 @@ void NMI_Handler(void)
 /**
   * @brief This function handles Hard fault interrupt.
   */
-void HardFault_Handler(void)
+
+__attribute__((naked))void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
 
@@ -257,6 +258,34 @@ void USART1_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+void RTC_WKUP_IRQHandler(void)
+{
+  HW_TS_RTC_Wakeup_Handler();
+}
 
+void IPCC_C1_TX_IRQHandler(void)
+{
+  HW_IPCC_Tx_Handler();
+
+  return;
+}
+
+void IPCC_C1_RX_IRQHandler(void)
+{
+  HW_IPCC_Rx_Handler();
+  return;
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+	HAL_GPIO_EXTI_IRQHandler(INTB_Pin);
+	HAL_GPIO_EXTI_IRQHandler(INT2B_Pin);
+  return;
+}
+
+void EXTI4_IRQHandler(void)
+{
+	HAL_GPIO_EXTI_IRQHandler(INT_ICM_Pin);
+}
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

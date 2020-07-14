@@ -190,8 +190,12 @@ uint16_t ICM_Initialize(void) {
 
 		// Configure AUX_I2C Magnetometer (onboard ICM-20948)
 		ICM_SelectBank(USER_BANK_0); // Select user bank 0
-		ICM_WriteOneByte(0x0F, 0x30); // INT Pin / Bypass Enable Configuration
+//		ICM_WriteOneByte(0x0F, 0x30); // INT Pin / Bypass Enable Configuration
+//		ICM_WriteOneByte(0x0F, 0xF0); // INT Pin - active low, open drain, held until cleared, cleared by any read operation
+		ICM_WriteOneByte(0x0F, 0xC0);
+		ICM_WriteOneByte(0x11, 0x01); // INT_ENABLE_1 - Enable raw data ready interrupt from any sensor to propagate to interrupt pin
 		ICM_WriteOneByte(0x03, 0x20); // I2C_MST_EN
+//		ICM_WriteOneByte(0x03, 0x60); // I2C_MST_EN and FIFO_EN
 		ICM_SelectBank(USER_BANK_3); // Select user bank 3
 		ICM_WriteOneByte(0x01, 0x4D); // I2C Master mode and Speed 400 kHz ???
 		ICM_WriteOneByte(0x02, 0x01); // I2C_SLV0_DELAY_EN

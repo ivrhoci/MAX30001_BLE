@@ -27,6 +27,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <max30001.h>
+#include "app_conf.h"
+#include "stm32_seq.h"
 //#include "extern_var.h"
 /* USER CODE END INCLUDE */
 
@@ -303,61 +305,27 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
 void CDC_ReceiveCallback(uint8_t* Buf, uint32_t *Len){
+char buffer[100]="";
+USB_new_command=1;
+uint8_t i = strcspn((const char *)Buf, (char *) " ");
 
-	//char buffer[100]="";
-	USB_new_command=1;
-	//USB_command[20]="";
-	//USB_parameter[6]="";
-	//int ReadRegisterValue=0;
+for (uint8_t j = 0; j < *Len; j++)
+{
+	if (j < i) USB_command[j] = Buf[j];
+	if (j > i) USB_parameter[j-i-1] = Buf[j];
+	Buf[j]=0;
+}
 
-	uint8_t i = strcspn((const char *)Buf, (char *) " ");
-
-	for (uint8_t j = 0; j < *Len; j++)
-				{
-
-					if (j < i) USB_command[j] = Buf[j];
-					if (j > i) USB_parameter[j-i-1] = Buf[j];
-					Buf[j]=0;
-
-				}
-
-//printf("USB_command = %s\r\n", USB_command);
-//printf("USB_parameter = %s\r\n", USB_parameter);
-//printf("USB_parameter = %d\r\n", USB_parameter);
 reg=strtol(USB_parameter, NULL, 16);
-//printf("USB_parameter = %d\r\n", reg);
 
-		//	if (strncmp(USB_command, "EN_INT", 6) == 0){
-//				sprintf(buffer, "Recieved %.20s register write command = %.6s\r\n", USB_command, USB_parameter);
-//				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
-//				CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer)); //ispis poruke na USB VCOM port
-//
-//				ReadRegisterValue=max30001_usb_init(USB_command, reg);
-//
-//				sprintf(buffer, "Read register value = %X\r\n", ReadRegisterValue);
-//				printf("Buffer = %s\n", buffer);                    //debug ispis na UART COM port
-//				CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer)); //ispis poruke na USB VCOM port
+//printf("USB naredba primljenja\r\n");
+//printf("USB_command = %s\r\n", USB_command);
 
-//				max30001_reg_write(EN_INT, (uint32_t) USB_parameter);
-//				max30001_reg_read(EN_INT, &max30001_en_int.all);
-//				printf("En_int register: %d\r\n",max30001_en_int.all);
+sprintf(buffer, "Recieved USB command = %.10s with parameter %.6s\r\n", USB_command, USB_parameter);
+CDC_Transmit_FS((uint8_t *)buffer, strlen((char *)buffer));
+UTIL_SEQ_SetTask( 1<<CFG_TASK_USB_COMMAND, CFG_SCH_PRIO_0);         //postavi task koji će analizirati primljenu naredbu
 
-//				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-//			}
-//			else if (strncmp(USB_command, "600000", 6) == 0){
-//				sprintf(buffer, "Recieved reset command\r\n");
-//				CDC_Transmit_FS((uint8_t *)buffer, strlen((char *)buffer));
-//				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-//					}
-//			else if (strncmp(USB_command, "CNFG_GEN", 8) == 0){
-//				sprintf(buffer, "Recieved CNFG_GEN register write command = %.6s\r\n", USB_parameter);
-//				CDC_Transmit_FS((uint8_t *)buffer, strlen((char *)buffer));
-//				printf("Buffer = %s\n", buffer);
-//				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-//				}
-//	free(USB_command);
-//	free(USB_parameter);
-	}
+}
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
 /**
@@ -367,5 +335,4 @@ reg=strtol(USB_parameter, NULL, 16);
 /**
   * @}
   */
-
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -6,7 +6,7 @@
  ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under Ultimate Liberty license
@@ -26,9 +26,9 @@
  */
 
 #define BLE_DBG_APP_EN             0
-#define BLE_DBG_DIS_EN             0
-#define BLE_DBG_HRS_EN             0
-#define BLE_DBG_SVCCTL_EN          0
+#define BLE_DBG_DIS_EN             1
+#define BLE_DBG_HRS_EN             1
+#define BLE_DBG_SVCCTL_EN          1
 #define BLE_DBG_BLS_EN             0
 #define BLE_DBG_HTS_EN             0
 #define BLE_DBG_P2P_STM_EN         0
@@ -194,6 +194,11 @@
 #define BLE_DBG_DTS_BUF             PRINT_NO_MESG
 #endif
 
+#if ( BLE_DBG_CRS_STM_EN != 0 )
+#define BLE_DBG_CRS_STM_MSG         PRINT_MESG_DBG
+#else
+#define BLE_DBG_CRS_STM_MSG         PRINT_NO_MESG
+#endif
 #endif /*__BLE_DBG_CONF_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

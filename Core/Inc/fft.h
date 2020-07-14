@@ -40,7 +40,7 @@
 #define FFT_Length  4096
 /* Private variables ---------------------------------------------------------*/
 //extern int FFT_SIZE_CHOOSE;
-
+extern float32_t Cmplx_Mag_Output_f32 [FFT_Length/2];
 /* Private function prototypes -----------------------------------------------*/
 uint32_t FFT_PROCESSING_F32Process(uint32_t mode);
 

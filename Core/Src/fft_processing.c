@@ -44,6 +44,9 @@ uint8_t ifftFlag = 0;
 /**
   * @brief  This function Calculate FFT in F32.
   * @param  FFT Length : 4096, 2048, 1024, 256, 64
+  *         mode:
+  *         0 - test mode - debug outputs
+  *         1 - bpm mode - used in bpm calculation
   * @retval None
   */
 uint32_t FFT_PROCESSING_F32Process(uint32_t mode)
@@ -53,10 +56,6 @@ uint32_t FFT_PROCESSING_F32Process(uint32_t mode)
   float32_t maxValue = 0;    /* Max FFT value is stored here */
   uint32_t maxIndex = 0;    /* Index in Output array where max value is */
 
-  unsigned index_fill_input_buffer, index_fill_output_buffer = 0;
-  //uint32_t duration_us = 0x00;
-
-
   for (int i = 0; i < FFT_Length; i++)
   {
 	  //Copy data from IIR filter
@@ -64,15 +63,13 @@ uint32_t FFT_PROCESSING_F32Process(uint32_t mode)
 		  aFFT_Input_f32[i] = aIIR_F32_Output_Scaled[i];
 	  else /* Zero padding*/
 		  aFFT_Input_f32[i] = 0;
-    //TIM2_Config();
   }
 
   /* Initialize the RFFT/RIFFT module */
   arm_rfft_fast_init_f32(&FFT_F32_struct, FFT_Length);
-
-  //TimerCount_Start();
+ /* RFFT processing*/
   arm_rfft_fast_f32(&FFT_F32_struct, aFFT_Input_f32, aFFT_Output_f32, ifftFlag);
-  //TimerCount_Stop(nb_cycles);
+
   if (mode == TEST_MODE)
     {
 	  printf("RFFT (real FFT) with N=4096 done\r\n");
@@ -82,8 +79,6 @@ uint32_t FFT_PROCESSING_F32Process(uint32_t mode)
 		  printf("%f\r\n", aFFT_Output_f32[i]);
 	  }
     }
-
-  //duration_us = (uint32_t)(((uint64_t)US_IN_SECOND * (nb_cycles)) / SystemCoreClock);
 
 
   /* Process the data through the Complex Magnitude Module for calculating the magnitude at each bin */
@@ -98,7 +93,7 @@ uint32_t FFT_PROCESSING_F32Process(uint32_t mode)
 	  }
   }
 
-  /* Calculates maxValue and returns corresponding value */
+  /* Calculates maxValue and maxIndex */
   arm_max_f32(Cmplx_Mag_Output_f32, FFT_Length/2, &maxValue, &maxIndex);
 
   if (mode == TEST_MODE)

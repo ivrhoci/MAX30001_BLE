@@ -1,8 +1,9 @@
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    ble.h
+  * @file    dis_app.h
   * @author  MCD Application Team
-  * @brief   BLE interface
+  * @brief   Header for dis_application.c module
   ******************************************************************************
   * @attention
  *
@@ -16,60 +17,61 @@
  *
  ******************************************************************************
  */
-
+/* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __BLE_H
-#define __BLE_H
+#ifndef __DIS_APP_H
+#define __DIS_APP_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
 /* Includes ------------------------------------------------------------------*/
-#include "ble_conf.h"
-#include "ble_dbg_conf.h"
 
-/**< core */
-#include "core/ble_core.h"
-#include "core/ble_bufsize.h"
-#include "core/ble_defs.h"
-#include "core/ble_legacy.h"
-#include "core/ble_std.h"
+/* Private includes -----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 
-/**< blesvc */
-#include "svc/Inc/bls.h"
-#include "svc/Inc/crs_stm.h"
-#include "svc/Inc/dis.h"
-#include "svc/Inc/eds_stm.h"
-#include "svc/Inc/hids.h"
-//#include "svc/Inc/hrs.h"
-#include "svc/Inc/hts.h"
-#include "svc/Inc/ias.h"
-#include "svc/Inc/lls.h"
-#include "svc/Inc/tps.h"
-#include "svc/Inc/motenv_stm.h"
-#include "svc/Inc/p2p_stm.h"
-#include "svc/Inc/otas_stm.h"
-#include "svc/Inc/mesh.h"  
-#include "svc/Inc/template_stm.h"  
-  
-#include "svc/Inc/svc_ctl.h"
-
-#include "svc/Inc/uuid.h"
-
+/* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
+/* USER CODE BEGIN ET */
+
+/* USER CODE END ET */
+
 /* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
+
+/* USER CODE END EC */
+
 /* External variables --------------------------------------------------------*/
+/* USER CODE BEGIN EV */
+
+/* USER CODE END EV */
+
 /* Exported macros -----------------------------------------------------------*/
+#define DISAPP_MANUFACTURER_NAME              "STM"
+#define DISAPP_MODEL_NUMBER                   "4502-1.0"
+#define DISAPP_SERIAL_NUMBER                  "1.0"
+#define DISAPP_HARDWARE_REVISION_NUMBER       "1.0"
+#define DISAPP_FIRMWARE_REVISION_NUMBER       "1.0"
+#define DISAPP_SOFTWARE_REVISION_NUMBER       "1.0"
+#define DISAPP_OUI                            0x123456
+#define DISAPP_MANUFACTURER_ID                0x9ABCDE
+/* USER CODE BEGIN EM */
+
+/* USER CODE END EM */
+
 /* Exported functions ------------------------------------------------------- */
+void DISAPP_Init(void);
+/* USER CODE BEGIN EF */
+
+/* USER CODE END EF */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*__BLE_H */
+#endif /*__DIS_APP_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

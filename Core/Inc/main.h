@@ -30,6 +30,8 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32wbxx_hal.h"
 #include "arm_math.h"
+//#include "stm32_seq.h"
+//#include "stm32_lpm.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -49,7 +51,7 @@ extern _Bool USB_new_command;
 extern uint32_t reg;
 #define INTB_Pin GPIO_PIN_11  //PC11 -> CN10_35
 #define INT2B_Pin GPIO_PIN_10 //PC10 -> CN10_29
-
+#define INT_ICM_Pin GPIO_PIN_4    //PC4 -> CN10_1
 
 #define NSS_SPI1_Pin GPIO_PIN_4 //PA4 -> CN10_17
 #define NSS_SPI2_Pin GPIO_PIN_12 //PB12 -> CN10_16
@@ -68,7 +70,7 @@ extern uint32_t reg;
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-
+void usb_command(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
